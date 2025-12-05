@@ -1,6 +1,6 @@
 const sequelize = require('../config/database');
 
-// Import de tous les modèles
+// Import de tous les modèles de base
 const Utilisateur = require('./Utilisateur');
 const Joueur = require('./Joueur');
 const Partenaire = require('./Partenaire');
@@ -12,11 +12,25 @@ const Explication = require('./Explication');
 const ModeJeu = require('./ModeJeu');
 const Partie = require('./Partie');
 
+// Import des modèles économie & gamification
+const Ressource = require('./Ressource');
+const Coin = require('./Coin');
+const PointsVie = require('./PointsVie');
+const XP = require('./XP');
+const Badge = require('./Badge');
+const Trophee = require('./Trophee');
+const InventaireBadge = require('./InventaireBadge');
+const InventaireTrophee = require('./InventaireTrophee');
+const Classement = require('./Classement');
+const HistoriqueTransaction = require('./HistoriqueTransaction');
+
 // ==========================================
 // DÉFINITION DES ASSOCIATIONS
 // ==========================================
 
 const defineAssociations = () => {
+  // ========== UTILISATEURS ==========
+  
   // 1. UTILISATEUR ↔ JOUEUR (1:1)
   Utilisateur.hasOne(Joueur, {
     foreignKey: 'idUtilisateur',
@@ -34,6 +48,8 @@ const defineAssociations = () => {
   Partenaire.belongsTo(Utilisateur, {
     foreignKey: 'idUtilisateur'
   });
+
+  // ========== QUIZ & QUESTIONS ==========
 
   // 3. QUIZ ↔ QUESTION (1:N)
   Quiz.hasMany(Question, {
@@ -74,6 +90,8 @@ const defineAssociations = () => {
     otherKey: 'idQuiz'
   });
 
+  // ========== PARTIES ==========
+
   // 7. JOUEUR ↔ PARTIE (1:N)
   Joueur.hasMany(Partie, {
     foreignKey: 'idJoueur',
@@ -99,6 +117,86 @@ const defineAssociations = () => {
     foreignKey: 'idMode'
   });
 
+  // ========== ÉCONOMIE & GAMIFICATION ==========
+
+  // 10. JOUEUR ↔ RESSOURCE (1:N)
+  Joueur.hasMany(Ressource, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  Ressource.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 11. JOUEUR ↔ COIN (1:1)
+  Joueur.hasOne(Coin, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  Coin.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 12. JOUEUR ↔ POINTSVIE (1:1)
+  Joueur.hasOne(PointsVie, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  PointsVie.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 13. JOUEUR ↔ XP (1:1)
+  Joueur.hasOne(XP, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  XP.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 14. JOUEUR ↔ BADGE (N:N via InventaireBadge)
+  Joueur.belongsToMany(Badge, {
+    through: InventaireBadge,
+    foreignKey: 'idJoueur',
+    otherKey: 'idBadge'
+  });
+  Badge.belongsToMany(Joueur, {
+    through: InventaireBadge,
+    foreignKey: 'idBadge',
+    otherKey: 'idJoueur'
+  });
+
+  // 15. JOUEUR ↔ TROPHÉE (N:N via InventaireTrophée)
+  Joueur.belongsToMany(Trophee, {
+    through: InventaireTrophee,
+    foreignKey: 'idJoueur',
+    otherKey: 'idTrophee'
+  });
+  Trophee.belongsToMany(Joueur, {
+    through: InventaireTrophee,
+    foreignKey: 'idTrophee',
+    otherKey: 'idJoueur'
+  });
+
+  // 16. JOUEUR ↔ CLASSEMENT (1:N)
+  Joueur.hasMany(Classement, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  Classement.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 17. JOUEUR ↔ HISTORIQUE_TRANSACTION (1:N)
+  Joueur.hasMany(HistoriqueTransaction, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  HistoriqueTransaction.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
   console.log('✅ Associations définies');
 };
 
@@ -118,6 +216,7 @@ const syncDatabase = async (options = {}) => {
 
 module.exports = {
   sequelize,
+  // Modèles de base
   Utilisateur,
   Joueur,
   Partenaire,
@@ -128,5 +227,17 @@ module.exports = {
   Explication,
   ModeJeu,
   Partie,
+  // Modèles économie & gamification
+  Ressource,
+  Coin,
+  PointsVie,
+  XP,
+  Badge,
+  Trophee,
+  InventaireBadge,
+  InventaireTrophee,
+  Classement,
+  HistoriqueTransaction,
+  // Fonction sync
   syncDatabase
 };
