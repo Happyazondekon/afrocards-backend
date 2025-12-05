@@ -25,8 +25,8 @@ const ChallengeSponsorise = require('./ChallengeSponsorise');
 const Promotion = require('./Promotion');
 const Publicite = require('./Publicite');
 
-// 5. Économie & Gamification (Assurez-vous que ces fichiers existent)
-const Ressource = require('./Ressource'); // Modèle abstrait/parent si utilisé, sinon retirer
+// 5. Économie & Gamification
+const Ressource = require('./Ressource');
 const Coin = require('./Coin');
 const PointsVie = require('./PointsVie');
 const XP = require('./XP');
@@ -36,6 +36,11 @@ const InventaireBadge = require('./InventaireBadge');
 const InventaireTrophee = require('./InventaireTrophee');
 const Classement = require('./Classement');
 const HistoriqueTransaction = require('./HistoriqueTransaction');
+
+// 6. Social (NOUVEAU)
+const Message = require('./Message');
+const Notification = require('./Notification');
+const NotificationParametre = require('./NotificationParametre');
 
 // ==========================================
 // DÉFINITION DES ASSOCIATIONS
@@ -103,7 +108,7 @@ const defineAssociations = () => {
     otherKey: 'idQuiz'
   });
 
-  // 10. QUESTION ↔ CATÉGORIE (N:N)
+  // 7. QUESTION ↔ CATÉGORIE (N:N)
   Question.belongsToMany(Categorie, {
     through: 'question_categories',
     foreignKey: 'idQuestion',
@@ -117,7 +122,7 @@ const defineAssociations = () => {
 
   // ========== PARTIES ==========
 
-  // 7. JOUEUR ↔ PARTIE (1:N)
+  // 8. JOUEUR ↔ PARTIE (1:N)
   Joueur.hasMany(Partie, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -126,7 +131,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 8. QUIZ ↔ PARTIE (1:N)
+  // 9. QUIZ ↔ PARTIE (1:N)
   Quiz.hasMany(Partie, {
     foreignKey: 'idQuiz'
   });
@@ -134,7 +139,7 @@ const defineAssociations = () => {
     foreignKey: 'idQuiz'
   });
 
-  // 9. MODEJEU ↔ PARTIE (1:N)
+  // 10. MODEJEU ↔ PARTIE (1:N)
   ModeJeu.hasMany(Partie, {
     foreignKey: 'idMode'
   });
@@ -173,8 +178,6 @@ const defineAssociations = () => {
 
   // ========== ÉCONOMIE & GAMIFICATION ==========
 
-  // Note : Ces associations supposent que les fichiers modèles (Coin.js, XP.js, etc.) existent.
-  
   // 14. JOUEUR ↔ COIN (1:1)
   Joueur.hasOne(Coin, {
     foreignKey: 'idJoueur',
@@ -202,11 +205,12 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 17. JOUEUR ↔ BADGE (N:N via InventaireBadge)
+  // 17. JOUEUR ↔ BADGE (N:N via InventaireBadge) - ASSOCIATIONS AMÉLIORÉES
   Joueur.belongsToMany(Badge, {
     through: InventaireBadge,
     foreignKey: 'idJoueur',
-    otherKey: 'idBadge'
+    otherKey: 'idBadge',
+    as: 'badges'
   });
   Badge.belongsToMany(Joueur, {
     through: InventaireBadge,
@@ -214,11 +218,12 @@ const defineAssociations = () => {
     otherKey: 'idJoueur'
   });
 
-  // 18. JOUEUR ↔ TROPHÉE (N:N via InventaireTrophée)
+  // 18. JOUEUR ↔ TROPHÉE (N:N via InventaireTrophée) - ASSOCIATIONS AMÉLIORÉES
   Joueur.belongsToMany(Trophee, {
     through: InventaireTrophee,
     foreignKey: 'idJoueur',
-    otherKey: 'idTrophee'
+    otherKey: 'idTrophee',
+    as: 'trophees'
   });
   Trophee.belongsToMany(Joueur, {
     through: InventaireTrophee,
@@ -226,7 +231,23 @@ const defineAssociations = () => {
     otherKey: 'idJoueur'
   });
 
-  // 19. JOUEUR ↔ CLASSEMENT (1:N)
+  // 19. INVENTAIREBADGE ↔ BADGE (1:N)
+  InventaireBadge.belongsTo(Badge, {
+    foreignKey: 'idBadge'
+  });
+  Badge.hasMany(InventaireBadge, {
+    foreignKey: 'idBadge'
+  });
+
+  // 20. INVENTAIRETROPHEE ↔ TROPHEE (1:N)
+  InventaireTrophee.belongsTo(Trophee, {
+    foreignKey: 'idTrophee'
+  });
+  Trophee.hasMany(InventaireTrophee, {
+    foreignKey: 'idTrophee'
+  });
+
+  // 21. JOUEUR ↔ CLASSEMENT (1:N)
   Joueur.hasMany(Classement, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -235,7 +256,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 20. JOUEUR ↔ HISTORIQUE_TRANSACTION (1:N)
+  // 22. JOUEUR ↔ HISTORIQUE_TRANSACTION (1:N)
   Joueur.hasMany(HistoriqueTransaction, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -244,7 +265,49 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  console.log('✅ Associations définies');
+  // ========== MODULE SOCIAL (NOUVEAU) ==========
+
+  // 23. JOUEUR ↔ MESSAGE (1:N) - Messages envoyés
+  Joueur.hasMany(Message, {
+    foreignKey: 'idExpediteur',
+    as: 'messagesEnvoyes',
+    onDelete: 'CASCADE'
+  });
+  Message.belongsTo(Joueur, {
+    foreignKey: 'idExpediteur',
+    as: 'expediteur'
+  });
+
+  // 24. JOUEUR ↔ MESSAGE (1:N) - Messages reçus
+  Joueur.hasMany(Message, {
+    foreignKey: 'idDestinataire',
+    as: 'messagesRecus',
+    onDelete: 'CASCADE'
+  });
+  Message.belongsTo(Joueur, {
+    foreignKey: 'idDestinataire',
+    as: 'destinataire'
+  });
+
+  // 25. JOUEUR ↔ NOTIFICATION (1:N)
+  Joueur.hasMany(Notification, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  Notification.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  // 26. JOUEUR ↔ NOTIFICATIONPARAMETRE (1:1)
+  Joueur.hasOne(NotificationParametre, {
+    foreignKey: 'idJoueur',
+    onDelete: 'CASCADE'
+  });
+  NotificationParametre.belongsTo(Joueur, {
+    foreignKey: 'idJoueur'
+  });
+
+  console.log('✅ Associations définies (avec Module Social et Gamification complète)');
 };
 
 // Initialiser les associations
@@ -264,20 +327,24 @@ const syncDatabase = async (options = {}) => {
 module.exports = {
   sequelize,
   syncDatabase,
-  // Modèles
+  // Modèles Utilisateurs
   Utilisateur,
   Joueur,
   Partenaire,
+  // Modèles Quiz
   Categorie,
   Quiz,
   Question,
   Reponse,
   Explication,
+  // Modèles Jeu
   ModeJeu,
   Partie,
+  // Modèles Marketing
   ChallengeSponsorise,
   Promotion,
   Publicite,
+  // Modèles Économie
   Ressource,
   Coin,
   PointsVie,
@@ -287,5 +354,9 @@ module.exports = {
   InventaireBadge,
   InventaireTrophee,
   Classement,
-  HistoriqueTransaction
+  HistoriqueTransaction,
+  // Modèles Social
+  Message,
+  Notification,
+  NotificationParametre
 };

@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const InventaireBadge = sequelize.define('InventaireBadge', {
-  idInventaireBadge: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
@@ -26,17 +26,10 @@ const InventaireBadge = sequelize.define('InventaireBadge', {
   dateObtention: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
-  },
-  affiche: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    comment: 'Badge affiché sur le profil'
   }
 }, {
   tableName: 'inventaire_badges',
-  timestamps: true,
-  createdAt: 'dateObtention',
-  updatedAt: false
+  timestamps: false
 });
 
 module.exports = InventaireBadge;

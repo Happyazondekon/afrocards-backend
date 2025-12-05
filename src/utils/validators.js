@@ -218,7 +218,7 @@ const partenaireValidator = {
   ]
 };
 
-// 10. Validateurs pour l'Économie (AJOUTÉ)
+// 10. Validateurs pour l'Économie
 const economieValidator = {
   achat: [
     body('typeItem')
@@ -226,6 +226,66 @@ const economieValidator = {
       .isIn(['vie', 'coins', 'booster']).withMessage('Type invalide (vie, coins, booster)'),
     body('montant')
       .isInt({ min: 1 }).withMessage('Montant invalide')
+  ]
+};
+
+// 11. Validateurs pour le Module Social (NOUVEAU)
+// socialValidator (dans validators.js) - MODIFIER
+const socialValidator = {
+  // Validation pour l'envoi de message
+  sendMessage: [
+    body('idDestinataire')
+      .notEmpty().withMessage('L\'ID du destinataire est requis')
+      .isInt().withMessage('L\'ID du destinataire doit être un nombre entier'),
+    
+    body('contenu')
+      .notEmpty().withMessage('Le contenu du message est requis')
+      .trim()
+      .isLength({ min: 1, max: 1000 }).withMessage('Le message doit contenir entre 1 et 1000 caractères')
+  ],
+
+  // Validation pour la création de notification
+  createNotification: [
+    body('type')
+      .notEmpty().withMessage('Le type de notification est requis')
+      .isIn(['message', 'partie', 'ami', 'recompense', 'systeme', 'promo'])
+      .withMessage('Type de notification invalide'),
+    
+    body('contenu')
+      .notEmpty().withMessage('Le contenu de la notification est requis')
+      .trim()
+      .isLength({ max: 500 }).withMessage('Le contenu ne doit pas dépasser 500 caractères'),
+    
+    body('canal')
+      .optional()
+      .isIn(['email', 'push', 'in-app'])
+      .withMessage('Canal invalide (email, push, in-app)'),
+    
+    body('idJoueur')
+      .notEmpty().withMessage('L\'ID du joueur est requis')
+      .isInt().withMessage('L\'ID du joueur doit être un entier')
+  ],
+
+  // CORRIGER CETTE PARTIE : updateNotificationSettings (pas updateParams)
+  updateNotificationSettings: [
+    body('notifMessage')
+      .optional()
+      .isBoolean().withMessage('notifMessage doit être un booléen'),
+    
+    body('notifChallenge')
+      .optional()
+      .isBoolean().withMessage('notifChallenge doit être un booléen'),
+    
+    body('notifPromo')
+      .optional()
+      .isBoolean().withMessage('notifPromo doit être un booléen')
+  ],
+
+  // Validation pour marquer un message comme lu
+  markAsRead: [
+    body('idMessage')
+      .optional()
+      .isInt().withMessage('L\'ID du message doit être un entier')
   ]
 };
 
@@ -242,5 +302,6 @@ module.exports = {
   partieValidator,
   adminValidator,
   partenaireValidator,
-  economieValidator     // <-- Ajouté à l'export
+  economieValidator,
+  socialValidator       // <-- NOUVEAU : Ajouté à l'export
 };

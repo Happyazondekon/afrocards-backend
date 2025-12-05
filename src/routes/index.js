@@ -13,8 +13,9 @@ const partieRoutes = require('./partie.routes');
 const classementRoutes = require('./classement.routes');
 const adminRoutes = require('./admin.routes');
 const partenaireRoutes = require('./partenaire.routes');
-const economieRoutes = require('./economie.routes'); // <-- Ajout Import
-
+const economieRoutes = require('./economie.routes');
+const socialRoutes = require('./social.routes');
+const gamificationRoutes = require('./gamification.routes'); // <-- AJOUT
 
 // Utiliser les routes
 router.use('/auth', authRoutes);
@@ -28,14 +29,32 @@ router.use('/parties', partieRoutes);
 router.use('/classement', classementRoutes);
 router.use('/admin', adminRoutes);
 router.use('/partenaires', partenaireRoutes);
-router.use('/economie', economieRoutes); // <-- Ajout Route (/api/economie)
+router.use('/economie', economieRoutes);
+router.use('/social', socialRoutes);
+router.use('/gamification', gamificationRoutes); // <-- AJOUT
 
 // Route de test API
 router.get('/health', (req, res) => {
   res.json({
     success: true,
     message: 'API AFROCARDS opérationnelle',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    modules: {
+      auth: '✅',
+      quiz: '✅',
+      questions: '✅',
+      reponses: '✅',
+      explications: '✅',
+      categories: '✅',
+      modes: '✅',
+      parties: '✅',
+      classement: '✅',
+      admin: '✅',
+      partenaires: '✅',
+      economie: '✅',
+      social: '✅',
+      gamification: '✅ NOUVEAU' // <-- AJOUT
+    }
   });
 });
 

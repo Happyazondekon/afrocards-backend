@@ -1,4 +1,7 @@
-const { Partie, Quiz, ModeJeu, Joueur } = require('../models');
+const { Partie, Quiz, ModeJeu, Joueur, sequelize, Notification } = require('../models');
+const badgeService = require('../services/badge.service');
+
+
 
 // 1. Démarrer une nouvelle partie
 exports.startPartie = async (req, res) => {
@@ -73,43 +76,51 @@ exports.updateProgress = async (req, res) => {
   }
 };
 
-// 3. Terminer la partie (Fin du jeu avec calcul des récompenses)
+// 3. Terminer la partie (Fin du jeu avec calcul des récompenses) - MODIFIÉ
 exports.endPartie = async (req, res) => {
+  const t = await sequelize.transaction(); // Utilisez votre instance sequelize
   try {
     const { id } = req.params;
     const { score, tempsTotal } = req.body;
 
-    const partie = await Partie.findByPk(id);
-    if (!partie) return res.status(404).json({ success: false, message: 'Partie introuvable' });
+    const partie = await Partie.findByPk(id, { transaction: t });
+    if (!partie) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Partie introuvable' });
+    }
 
     // Vérifier si la partie est déjà terminée pour éviter de donner les récompenses deux fois
     if (partie.statut === 'termine') {
+      await t.rollback();
       return res.status(400).json({ success: false, message: 'Partie déjà terminée' });
     }
 
     // Récupérer le joueur pour mettre à jour ses stats
-    const joueur = await Joueur.findByPk(partie.idJoueur);
-    if (!joueur) return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    const joueur = await Joueur.findByPk(partie.idJoueur, { transaction: t });
+    if (!joueur) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    }
 
+    const scoreFinal = score || partie.score;
+    
     // --- LOGIQUE DE RÉCOMPENSE ---
     // 1 point de score = 10 XP
-    const xpGagne = (score || partie.score) * 10;
+    const xpGagne = scoreFinal * 10;
     // 1 Coin pour 2 points de score (arrondi à l'inférieur)
-    // NOTE: Assurez-vous d'avoir ajouté un champ 'coins' ou 'solde' à votre modèle Joueur si vous voulez stocker l'argent
-    // Pour l'instant, on suppose que vous gérez cela, sinon on commente la ligne coins
-    const coinsGagnes = Math.floor((score || partie.score) / 2);
+    const coinsGagnes = Math.floor(scoreFinal / 2);
 
     // Mise à jour de la partie
     await partie.update({
-      score: score !== undefined ? score : partie.score,
+      score: scoreFinal,
       tempsTotal: tempsTotal,
       progression: 100,
       statut: 'termine',
       dateFin: new Date()
-    });
+    }, { transaction: t });
 
     // Mise à jour du Joueur (XP, Niveau, Score Total)
-    const nouveauScoreTotal = (joueur.scoreTotal || 0) + (score || partie.score);
+    const nouveauScoreTotal = (joueur.scoreTotal || 0) + scoreFinal;
     
     // Calcul simple du niveau : 1 niveau tous les 1000 points de score total
     const nouveauNiveau = Math.floor(nouveauScoreTotal / 1000) + 1;
@@ -121,8 +132,44 @@ exports.endPartie = async (req, res) => {
       niveau: nouveauNiveau,
       // Décommentez la ligne ci-dessous si vous avez ajouté le champ 'coins' au modèle Joueur
       // coins: (joueur.coins || 0) + coinsGagnes 
-    });
+    }, { transaction: t });
 
+    // ========== NOUVEAU : VÉRIFICATION DES BADGES ==========
+    let nouveauxBadges = [];
+    try {
+      nouveauxBadges = await badgeService.verifierBadges(joueur, { transaction: t });
+    } catch (badgeError) {
+      console.error('Erreur vérification badges:', badgeError);
+      // On continue même si erreur badges, ne pas faire échouer la partie
+    }
+
+    // ========== OPTIONNEL : VÉRIFICATION DES TROPHEES ==========
+    // Vous pouvez ajouter un service similaire pour les trophées
+
+    // ========== CRÉATION DE NOTIFICATION SI NOUVEAUX BADGES ==========
+    if (nouveauxBadges.length > 0) {
+      await Notification.create({
+        idJoueur: joueur.idJoueur,
+        type: 'recompense',
+        titre: '🎉 Nouveaux badges débloqués !',
+        contenu: `Vous avez débloqué ${nouveauxBadges.length} nouveau(x) badge(s) !`,
+        canal: 'in-app'
+      }, { transaction: t });
+    }
+
+    // ========== NOTIFICATION SI NIVEAU SUP ==========
+    if (aGagneNiveau) {
+      await Notification.create({
+        idJoueur: joueur.idJoueur,
+        type: 'recompense',
+        titre: '🎊 Félicitations !',
+        contenu: `Vous êtes passé au niveau ${nouveauNiveau} !`,
+        canal: 'in-app'
+      }, { transaction: t });
+    }
+
+    await t.commit();
+    
     res.status(200).json({
       success: true,
       message: 'Partie terminée avec succès',
@@ -132,14 +179,25 @@ exports.endPartie = async (req, res) => {
           xp: xpGagne,
           coins: coinsGagnes,
           levelUp: aGagneNiveau,
-          nouveauNiveau: aGagneNiveau ? nouveauNiveau : joueur.niveau
+          nouveauNiveau: aGagneNiveau ? nouveauNiveau : joueur.niveau,
+          nouveauxBadges: nouveauxBadges.map(b => ({
+            id: b.idBadge,
+            nom: b.nom,
+            description: b.description,
+            icone: b.icone
+          }))
         }
       }
     });
 
   } catch (error) {
+    await t.rollback();
     console.error('Erreur endPartie:', error);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
   }
 };
 

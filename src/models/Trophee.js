@@ -14,25 +14,20 @@ const Trophee = sequelize.define('Trophee', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: false
   },
   icone: {
     type: DataTypes.STRING(500),
     allowNull: true,
     defaultValue: '/trophees/default.png'
   },
-  rarete: {
-    type: DataTypes.ENUM('bronze', 'argent', 'or', 'platine', 'diamant'),
-    defaultValue: 'bronze'
-  },
-  condition: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    comment: 'Conditions pour obtenir le trophée'
+  rareté: {
+    type: DataTypes.ENUM('commun', 'rare', 'epique', 'legendaire'),
+    defaultValue: 'commun'
   }
 }, {
   tableName: 'trophees',
-  timestamps: true
+  timestamps: false
 });
 
 module.exports = Trophee;

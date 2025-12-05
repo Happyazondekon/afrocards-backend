@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const InventaireTrophee = sequelize.define('InventaireTrophee', {
-  idInventaireTrophee: {
+  id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
@@ -26,17 +26,10 @@ const InventaireTrophee = sequelize.define('InventaireTrophee', {
   dateObtention: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
-  },
-  affiche: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    comment: 'Trophée affiché sur le profil'
   }
 }, {
   tableName: 'inventaire_trophees',
-  timestamps: true,
-  createdAt: 'dateObtention',
-  updatedAt: false
+  timestamps: false
 });
 
 module.exports = InventaireTrophee;

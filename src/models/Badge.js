@@ -14,25 +14,30 @@ const Badge = sequelize.define('Badge', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: false
   },
   icone: {
     type: DataTypes.STRING(500),
     allowNull: true,
     defaultValue: '/badges/default.png'
   },
-  rarete: {
-    type: DataTypes.ENUM('commun', 'rare', 'epique', 'legendaire'),
-    defaultValue: 'commun'
+  conditionType: {
+    type: DataTypes.STRING(50), 
+    allowNull: false,
+    comment: 'Ex: "score_total", "parties_jouees", "quiz_parfaits"'
   },
-  condition: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    comment: 'Conditions pour obtenir le badge (ex: {"quizCompletes": 10})'
+  conditionValeur: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    comment: 'La valeur à atteindre pour débloquer (ex: 1000)'
+  },
+  recompenseXP: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, {
   tableName: 'badges',
-  timestamps: true
+  timestamps: false
 });
 
 module.exports = Badge;
