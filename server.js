@@ -23,18 +23,34 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Bienvenue sur AFROCARDS API 🎮',
     version: '1.0.0',
-    status: 'active'
+    status: 'active',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      docs: 'En développement'
+    }
   });
 });
 
-// Import des routes (à venir)
-// const routes = require('./src/routes');
-// app.use('/api', routes);
+// Import des routes
+const routes = require('./src/routes');
+app.use('/api', routes);
 
 // Gestion des erreurs 404
 app.use((req, res) => {
   res.status(404).json({ 
-    error: 'Route non trouvée' 
+    success: false,
+    error: 'Route non trouvée',
+    path: req.path
+  });
+});
+
+// Gestion globale des erreurs
+app.use((err, req, res, next) => {
+  console.error('Erreur:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Erreur serveur interne'
   });
 });
 
@@ -42,7 +58,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`📍 Environnement: ${process.env.NODE_ENV}`);
-  console.log(`db host: ${process.env.DB_HOST}`);
+  console.log(`🔗 API: http://localhost:${PORT}/api`);
 });
 
 module.exports = app;
