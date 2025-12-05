@@ -1,10 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express'); // <-- Import Swagger UI
+const { swaggerDocs } = require('./src/config/swagger'); // <-- Import Config
+const { syncDatabase } = require('./src/models');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const { syncDatabase } = require('./src/models');
 
 // Synchroniser la DB au démarrage (en dev uniquement)
 if (process.env.NODE_ENV === 'development') {
@@ -18,17 +20,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- DOCUMENTATION SWAGGER ---
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+console.log(`📄 Documentation disponible sur http://localhost:${PORT}/api-docs`);
+
 // Route de test
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Bienvenue sur AFROCARDS API 🎮',
     version: '1.0.0',
     status: 'active',
-    endpoints: {
-      health: '/api/health',
-      auth: '/api/auth',
-      docs: 'En développement'
-    }
+    documentation: '/api-docs'
   });
 });
 
@@ -57,8 +59,8 @@ app.use((err, req, res, next) => {
 // Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📍 Environnement: ${process.env.NODE_ENV}`);
   console.log(`🔗 API: http://localhost:${PORT}/api`);
+  console.log(`📄 Docs: http://localhost:${PORT}/api-docs`);
 });
 
 module.exports = app;
