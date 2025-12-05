@@ -10,7 +10,7 @@ const Coin = sequelize.define('Coin', {
   idJoueur: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    unique: true,
+    unique: true, // Un seul portefeuille par joueur
     references: {
       model: 'joueurs',
       key: 'id_joueur'
@@ -18,11 +18,11 @@ const Coin = sequelize.define('Coin', {
   },
   solde: {
     type: DataTypes.INTEGER,
-    defaultValue: 100,
+    defaultValue: 0,
+    allowNull: false,
     validate: {
       min: 0
-    },
-    comment: 'Monnaie virtuelle du joueur'
+    }
   },
   devise: {
     type: DataTypes.STRING(10),

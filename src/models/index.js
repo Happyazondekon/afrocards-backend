@@ -1,19 +1,32 @@
 const sequelize = require('../config/database');
 
-// Import de tous les modèles de base
+// ==========================================
+// IMPORTS DES MODÈLES
+// ==========================================
+
+// 1. Utilisateurs & Acteurs
 const Utilisateur = require('./Utilisateur');
 const Joueur = require('./Joueur');
 const Partenaire = require('./Partenaire');
+
+// 2. Contenu (Quiz)
 const Categorie = require('./Categorie');
 const Quiz = require('./Quiz');
 const Question = require('./Question');
 const Reponse = require('./Reponse');
 const Explication = require('./Explication');
+
+// 3. Jeu
 const ModeJeu = require('./ModeJeu');
 const Partie = require('./Partie');
 
-// Import des modèles économie & gamification
-const Ressource = require('./Ressource');
+// 4. Marketing (Partenaires)
+const ChallengeSponsorise = require('./ChallengeSponsorise');
+const Promotion = require('./Promotion');
+const Publicite = require('./Publicite');
+
+// 5. Économie & Gamification (Assurez-vous que ces fichiers existent)
+const Ressource = require('./Ressource'); // Modèle abstrait/parent si utilisé, sinon retirer
 const Coin = require('./Coin');
 const PointsVie = require('./PointsVie');
 const XP = require('./XP');
@@ -90,6 +103,18 @@ const defineAssociations = () => {
     otherKey: 'idQuiz'
   });
 
+  // 10. QUESTION ↔ CATÉGORIE (N:N)
+  Question.belongsToMany(Categorie, {
+    through: 'question_categories',
+    foreignKey: 'idQuestion',
+    otherKey: 'idCategorie'
+  });
+  Categorie.belongsToMany(Question, {
+    through: 'question_categories',
+    foreignKey: 'idCategorie',
+    otherKey: 'idQuestion'
+  });
+
   // ========== PARTIES ==========
 
   // 7. JOUEUR ↔ PARTIE (1:N)
@@ -117,18 +142,40 @@ const defineAssociations = () => {
     foreignKey: 'idMode'
   });
 
-  // ========== ÉCONOMIE & GAMIFICATION ==========
+  // ========== PARTENAIRES & MARKETING ==========
 
-  // 10. JOUEUR ↔ RESSOURCE (1:N)
-  Joueur.hasMany(Ressource, {
-    foreignKey: 'idJoueur',
+  // 11. PARTENAIRE ↔ CHALLENGE (1:N)
+  Partenaire.hasMany(ChallengeSponsorise, {
+    foreignKey: 'idPartenaire',
     onDelete: 'CASCADE'
   });
-  Ressource.belongsTo(Joueur, {
-    foreignKey: 'idJoueur'
+  ChallengeSponsorise.belongsTo(Partenaire, {
+    foreignKey: 'idPartenaire'
   });
 
-  // 11. JOUEUR ↔ COIN (1:1)
+  // 12. PARTENAIRE ↔ PROMOTION (1:N)
+  Partenaire.hasMany(Promotion, {
+    foreignKey: 'idPartenaire',
+    onDelete: 'CASCADE'
+  });
+  Promotion.belongsTo(Partenaire, {
+    foreignKey: 'idPartenaire'
+  });
+
+  // 13. PARTENAIRE ↔ PUBLICITÉ (1:N)
+  Partenaire.hasMany(Publicite, {
+    foreignKey: 'idPartenaire',
+    onDelete: 'CASCADE'
+  });
+  Publicite.belongsTo(Partenaire, {
+    foreignKey: 'idPartenaire'
+  });
+
+  // ========== ÉCONOMIE & GAMIFICATION ==========
+
+  // Note : Ces associations supposent que les fichiers modèles (Coin.js, XP.js, etc.) existent.
+  
+  // 14. JOUEUR ↔ COIN (1:1)
   Joueur.hasOne(Coin, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -137,7 +184,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 12. JOUEUR ↔ POINTSVIE (1:1)
+  // 15. JOUEUR ↔ POINTSVIE (1:1)
   Joueur.hasOne(PointsVie, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -146,7 +193,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 13. JOUEUR ↔ XP (1:1)
+  // 16. JOUEUR ↔ XP (1:1)
   Joueur.hasOne(XP, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -155,7 +202,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 14. JOUEUR ↔ BADGE (N:N via InventaireBadge)
+  // 17. JOUEUR ↔ BADGE (N:N via InventaireBadge)
   Joueur.belongsToMany(Badge, {
     through: InventaireBadge,
     foreignKey: 'idJoueur',
@@ -167,7 +214,7 @@ const defineAssociations = () => {
     otherKey: 'idJoueur'
   });
 
-  // 15. JOUEUR ↔ TROPHÉE (N:N via InventaireTrophée)
+  // 18. JOUEUR ↔ TROPHÉE (N:N via InventaireTrophée)
   Joueur.belongsToMany(Trophee, {
     through: InventaireTrophee,
     foreignKey: 'idJoueur',
@@ -179,7 +226,7 @@ const defineAssociations = () => {
     otherKey: 'idJoueur'
   });
 
-  // 16. JOUEUR ↔ CLASSEMENT (1:N)
+  // 19. JOUEUR ↔ CLASSEMENT (1:N)
   Joueur.hasMany(Classement, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -188,7 +235,7 @@ const defineAssociations = () => {
     foreignKey: 'idJoueur'
   });
 
-  // 17. JOUEUR ↔ HISTORIQUE_TRANSACTION (1:N)
+  // 20. JOUEUR ↔ HISTORIQUE_TRANSACTION (1:N)
   Joueur.hasMany(HistoriqueTransaction, {
     foreignKey: 'idJoueur',
     onDelete: 'CASCADE'
@@ -216,7 +263,8 @@ const syncDatabase = async (options = {}) => {
 
 module.exports = {
   sequelize,
-  // Modèles de base
+  syncDatabase,
+  // Modèles
   Utilisateur,
   Joueur,
   Partenaire,
@@ -227,7 +275,9 @@ module.exports = {
   Explication,
   ModeJeu,
   Partie,
-  // Modèles économie & gamification
+  ChallengeSponsorise,
+  Promotion,
+  Publicite,
   Ressource,
   Coin,
   PointsVie,
@@ -237,7 +287,5 @@ module.exports = {
   InventaireBadge,
   InventaireTrophee,
   Classement,
-  HistoriqueTransaction,
-  // Fonction sync
-  syncDatabase
+  HistoriqueTransaction
 };

@@ -16,41 +16,25 @@ const HistoriqueTransaction = sequelize.define('HistoriqueTransaction', {
     }
   },
   type: {
-    type: DataTypes.ENUM('achat', 'recharge', 'gain', 'depense', 'echange'),
+    type: DataTypes.ENUM('gain_jeu', 'achat_boutique', 'bonus_pub', 'depense_vie', 'recharge_vie', 'achat_coins'),
     allowNull: false
   },
   montant: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    comment: 'Montant en Coins'
-  },
-  ressourceType: {
-    type: DataTypes.ENUM('coin', 'pointsVie'),
-    defaultValue: 'coin'
-  },
-  date: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+    comment: 'Positif pour gain, négatif pour dépense'
   },
   description: {
-    type: DataTypes.TEXT,
+    type: DataTypes.STRING(255),
     allowNull: true
   },
-  objetCible: {
-    type: DataTypes.STRING(200),
-    allowNull: true,
-    comment: 'Nom de l\'objet acheté ou action effectuée'
-  },
-  referenceExterne: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    comment: 'ID de transaction externe (Stripe, PayPal, etc.)'
+  dateTransaction: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'historique_transactions',
-  timestamps: true,
-  createdAt: 'date',
-  updatedAt: false
+  timestamps: true
 });
 
 module.exports = HistoriqueTransaction;

@@ -18,17 +18,16 @@ const PointsVie = sequelize.define('PointsVie', {
   },
   solde: {
     type: DataTypes.INTEGER,
-    defaultValue: 5,
+    defaultValue: 5, // Par défaut 5 vies
+    allowNull: false,
     validate: {
       min: 0,
-      max: 10
-    },
-    comment: 'Points de vie disponibles'
+      max: 10 // Max 10 vies par exemple
+    }
   },
   derniereRecharge: {
     type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Date de dernière recharge automatique'
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'points_vie',
