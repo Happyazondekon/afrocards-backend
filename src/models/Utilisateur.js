@@ -39,6 +39,14 @@ const Utilisateur = sequelize.define('Utilisateur', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  resetPasswordToken: {
+  type: DataTypes.STRING(64),
+  allowNull: true
+},
+resetPasswordExpiry: {
+  type: DataTypes.DATE,
+  allowNull: true
+},
   typeUtilisateur: {
     type: DataTypes.ENUM('joueur', 'partenaire', 'admin'),
     allowNull: false

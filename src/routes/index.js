@@ -16,6 +16,9 @@ const partenaireRoutes = require('./partenaire.routes');
 const economieRoutes = require('./economie.routes');
 const socialRoutes = require('./social.routes');
 const gamificationRoutes = require('./gamification.routes'); // <-- AJOUT
+const gameplayRoutes = require('./gameplay.routes');
+const uploadRoutes = require('./upload.routes');
+const passwordRoutes = require('./password.routes');
 
 // Utiliser les routes
 router.use('/auth', authRoutes);
@@ -32,6 +35,9 @@ router.use('/partenaires', partenaireRoutes);
 router.use('/economie', economieRoutes);
 router.use('/social', socialRoutes);
 router.use('/gamification', gamificationRoutes); // <-- AJOUT
+router.use('/gameplay', gameplayRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/password', passwordRoutes);
 
 // Route de test API
 router.get('/health', (req, res) => {
